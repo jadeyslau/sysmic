@@ -1,0 +1,19 @@
+kinase_peptide = (
+"PVWNETFVFNLKPGDVERRLSVEVWDWDRTSRNDFMGAMSFGVSELLK" "APVDGWYKLLNQEEGEYYNVPVADADNCSLLQKFEACNYPLELYERVR" "MGPSSSPIPSPSPSPTDPKRCFFGASPGRLHISDFSFLMRRRKGSFGK" "VMLAERRGSDELYAIKILKKDVIVQDDDVDCTLVEKRVLALGGRGPGG" "RPHFLTQLHSTFQTPDRLYFVMEYVTGGDLMYHIQQLGKFKEPHAAFY" "AAEIAIGLFFLHNQGIIYRDLKLDNVMLDAEGHIKITDFGMCKENVF"
+)
+
+kinases = {
+            'PKC-n'  : ["RKGSFRR", "RRRSFRR"],
+            "PKC-y"  : ["RRRKGSF", "RRRKKSF"],
+            "DMPK-E" : ["KKRRRSL", "RKRRRSL", "KKRRRSV", "RKRRRSV"]
+            }
+
+notfound = True
+
+for k in kinases:
+    if any( x in kinase_peptide for x in kinases[k] ):
+        print('Matches: ',k)
+        notfound = False
+
+if notfound == True:
+    print(' No matches found')

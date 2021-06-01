@@ -1,0 +1,47 @@
+def find_max_repeats(trip, seq):
+    """
+    Finds the longest triplet repeat in a sequence
+    
+    :param trip: Triplet of nucleotides
+    :type trip: str 
+    :param seq: Sequence of nucleotides
+    :type seq: str
+    :return pos_max: Start index of longest repeat
+    :rtype: int
+    :return max_repeats: Number of repeats 
+    :rtype: int
+    """
+    
+    position = 0
+
+    seq_len = len(seq)
+
+    repeat = 1
+
+    max_repeats = 0
+    
+    pos_max = -1
+
+    while seq_len - position >= (max_repeats+1)*3:
+
+        index = seq[position:].find(trip*(max_repeats+1))
+
+        if index == -1:
+
+            position = seq_len
+
+        else:
+
+            index += position
+
+            while seq[index:index + repeat*3] == trip*repeat:
+                repeat += 1
+
+            max_repeats = repeat - 1
+            pos_max = index
+
+            position = index + (repeat-1)*3
+
+    return pos_max, max_repeats
+
+
