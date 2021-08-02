@@ -1,0 +1,5 @@
+setwd("/Users/jade/Development/Neuroscience/SysMIC/10 : Statistics/Part 2/")
+source('exercise_2_2_8.r')
+source('exercise_2_2_8.r')
+source('exercise_2_2_10.r')
+source('exercise_2_2_12.r')
