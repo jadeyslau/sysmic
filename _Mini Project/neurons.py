@@ -33,7 +33,7 @@ class Neuron(object):
 
 
     def voltage(self, I, R):
-
+        return none
 
     def plot(self, y):
         print('plot')
