@@ -17,21 +17,23 @@ import matplotlib.pyplot as plt
 # 𝑎 = 0.7, 𝑏 = 0.8 and 𝜏 = 12.5.
 
 class FHN_Neuron(object):
-    def __init__(self, a=0.7, b=0.8, tau=12.5, v_init=0.7, w_init=0.5):
+    def __init__(self, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
         self.a = a
         self.b = b
         self.tau = tau
 
-        self.v_init = v_init
-        self.w_init = w_init
+        self.x0 = x0
 
     def dx_dt(self, x, I):
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
         return [dvdt,dwdt]
 
-    def solve():
-        
+    def solve(self, x0, I):
+        y = odeint(self.dx_dt,x0,t)
+        return y
+
+    def plot(self, x0, I)
 # function that returns dy/dt
 # def model(x, t):
 #     I = 0.5
