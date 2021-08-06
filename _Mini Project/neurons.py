@@ -1,71 +1,98 @@
-import matplotlib.pyplot as plt
 import numpy as np
-
-class Neuron(object):
-    """Base neuron class with main components i.e. resistors, capacitors, and battery. Emulates current flow in a neuron."""
-
-    def __init__(self, g_K=36.0, g_Na=120.0, gLeak=0.3, V_K=-12.0, V_Na=115.0, V_leak=10.613, tmin=0, tmax=50):
-        # time constant
-
-        # Capacitance: Membrane capacitance per unit area (uF/cm^2) I = C * (dV/dt)
-        self.Cm = 1.0
-
-        # Resistance: The state of ion channels. The more open the lower the resistance, the higher the conductance (amount of current flowing through these resistors Ohm's Law: I = V/R)
-        # Average ion channel conductance per unit area (mS/cm^2)
-        self.g_K = g_K
-        self.g_Na = g_Na
-        self.gLeak = g_leak
-
-        # Battery: Concentration gradient of neuron is the external to internal ratio of ion concentration.
-        # self.I_ext = I_ext
-        # self.Q = C*R
-        #
-        # self.ts = np.linspace(0, 200, 300)
-        # self.tau = R*C
-
-        # Membrane potentials (mV)
-        self.V_K = V_K
-        self.V_Na = V_Na
-        self.V_leak = V_leak
-
-        # Time
-        self.T = np.linspace(self.tmin, self.tmax, 10000)
-
-
-    def voltage(self, I, R):
-        return none
-
-    def plot(self, y):
-        print('plot')
-        fig, ax = plt.subplots(1,1)
-
-        ax.plot(self.ts, y)
-        ax.set_xlabel("Time")
-
-        fig.tight_layout()
-        return fig
+from scipy.integrate import odeint
+import matplotlib.pyplot as plt
+# Fitzhugh-Nagumo equations:
+#           dv/dt = v - (v^3 / 3) - w + i
+#           dw/dt = (v + alpha - beta*w) / tau
+# v = membrane voltage
+# w = relaxation or recovery variable
+# I = input current
+# a, b, tau parameters of the model
+# 𝑎 = 0.7, 𝑏 = 0.8 and 𝜏 = 12.5.
+class Neuron():
+    def __init__(self, I_ext=0):
+        self.I_ext = I_ext
+        return None
 
     def self_identifies(self):
         return "I'm a neuron!"
 
+    # def plot(self, y, t, title):
+    #
+    #     # plot results
+    #     plt.plot(t,y)
+    #     plt.xlabel('time')
+    #     plt.ylabel('y(t)')
+    #     plt.title(title)
+    #     plt.show()
+    #     return None
 
-# class HHNeuron(Neuron):
+class FHN_Neuron(Neuron):
+    def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
+        Neuron.__init__(self, I_ext=I_ext)
+        self.a = a
+        self.b = b
+        self.tau = tau
+        print(I_ext)
+        self.x0 = x0
 
-class FNNeuron(Neuron):
-    """FitzHugh-Naguno neuron.
-    The units in this model are different from the HH ones.
-    Sources:
-    https://github.com/ruhugu/brainythings/blob/master/brainythings/neurons.py
-    https://en.wikipedia.org/w/index.php?title=FitzHugh%E2%80%93Nagumo_model&oldid=828788626
-    http://www.scholarpedia.org/article/FitzHugh-Nagumo_model
-    """
+    def dx_dt(self, x, t, I):
+        dvdt = x[0] - (x[0]**3/3) - x[1] + I
+        dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
+        return [dvdt,dwdt]
 
-    # Fitzhugh-Nagumo equations:
-    #           dv/dt = v - (v^3 / 3) - w + i
-    #           dw/dt = (v + alpha - beta*w) / tau
-    # v = membrane voltage
-    # w = relaxation or recovery variable
-    # I = input current
-    # a, b, tau parameters of the model
-    def __init__(self, v, w, I, a, b, tau):
-        Neuron.__init__()
+    def solve(self, x0, I, t):
+        y = odeint(self.dx_dt,x0,t,args=(I,))
+        print(y.shape)
+        return y
+
+    # def plot_FHN():
+    #     self.plot()
+
+    def plot(self, x0, I, t):
+        y = self.solve(x0, I, t)
+
+        # plot results
+        plt.plot(t,y)
+        plt.xlabel('time')
+        plt.ylabel('y(t)')
+        plt.title("Applied current: %s mA/cm2" % I)
+        plt.show()
+        return None
+
+    def self_identifies(self):
+        return "I'm a FitzHugh Nagamo neuron!"
+# function that returns dy/dt
+# def model(x, t):
+#     I = 0.5
+#     a=0.7
+#     b=0.8
+#     tau=12.5
+#     dvdt = x[0] - (x[0]**3/3) - x[1] + I
+#     dwdt = (x[0] + a - b*x[1]) / tau
+#     return np.array(dvdt,dwdt)
+
+# def dx_dt(x, t):
+#     I   = 0
+#     a   = 0.7
+#     b   = 0.8
+#     tau = 12.5
+#
+#     dvdt = x[0] - (x[0]**3/3) - x[1] + I
+#     dwdt = (x[0] + a - b*x[1]) / tau
+#     return [dvdt,dwdt]
+#
+# # initial condition
+# x0 = [0.5,-0.7]
+# I = 0
+# # time points
+# t = np.linspace(0, 200, num=1500)
+#
+# # solve ODE
+# y = odeint(dx_dt,x0,t)
+#
+# # plot results
+# plt.plot(t,y)
+# plt.xlabel('time')
+# plt.ylabel('y(t)')
+# plt.show()
