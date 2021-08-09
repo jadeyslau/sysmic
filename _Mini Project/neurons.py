@@ -1,14 +1,7 @@
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
-# Fitzhugh-Nagumo equations:
-#           dv/dt = v - (v^3 / 3) - w + i
-#           dw/dt = (v + alpha - beta*w) / tau
-# v = membrane voltage
-# w = relaxation or recovery variable
-# I = input current
-# a, b, tau parameters of the model
-# 𝑎 = 0.7, 𝑏 = 0.8 and 𝜏 = 12.5.
+
 class Neuron():
     def __init__(self, I_ext=0):
         self.I_ext = I_ext
@@ -16,24 +9,14 @@ class Neuron():
     # def self_identifies(self):
     #     return "I'm a neuron!"
 
-    # def plot(self, y, t, title):
-    #
-    #     # plot results
-    #     plt.plot(t,y)
-    #     plt.xlabel('time')
-    #     plt.ylabel('y(t)')
-    #     plt.title(title)
-    #     plt.show()
-    #     return None
-
 class FHN_Neuron(Neuron):
     def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
         super().__init__(I_ext=I_ext)
         self.a = a
         self.b = b
         self.tau = tau
-        print(I_ext)
         self.x0 = x0
+        self.I_ext = I_ext
 
     def dx_dt(self, x, t, I):
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
@@ -45,11 +28,8 @@ class FHN_Neuron(Neuron):
         print(y.shape)
         return y
 
-    # def plot_FHN():
-    #     self.plot()
-
-    def plot(self, x0, I, t):
-        y = self.solve(x0, I, t)
+    def plot(self, I, t):
+        y = self.solve(self.x0, I, t)
 
         # plot results
         plt.plot(t,y)
