@@ -3,20 +3,22 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
 class Neuron():
-    def __init__(self, I_ext=0):
+    def __init__(self, I_ext=0, *args, **kwargs):
         self.I_ext = I_ext
+        print('Neuron __init__() called')
 
     # def self_identifies(self):
     #     return "I'm a neuron!"
 
 class FHN_Neuron(Neuron):
-    def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
-        super().__init__(I_ext=I_ext)
+    def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5], *args, **kwargs):
+        super().__init__(I_ext)
         self.a = a
         self.b = b
         self.tau = tau
         self.x0 = x0
         self.I_ext = I_ext
+        print(I_ext)
 
     def dx_dt(self, x, t, I):
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
