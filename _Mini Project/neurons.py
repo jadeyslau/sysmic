@@ -12,10 +12,9 @@ import matplotlib.pyplot as plt
 class Neuron():
     def __init__(self, I_ext=0):
         self.I_ext = I_ext
-        return None
 
-    def self_identifies(self):
-        return "I'm a neuron!"
+    # def self_identifies(self):
+    #     return "I'm a neuron!"
 
     # def plot(self, y, t, title):
     #
@@ -29,7 +28,7 @@ class Neuron():
 
 class FHN_Neuron(Neuron):
     def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
-        Neuron.__init__(self, I_ext=I_ext)
+        super().__init__(I_ext=I_ext)
         self.a = a
         self.b = b
         self.tau = tau
