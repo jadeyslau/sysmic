@@ -3,22 +3,30 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 
 class Neuron():
-    def __init__(self, I_ext=0, *args, **kwargs):
+    def __init__(self, I_ext=0):
         self.I_ext = I_ext
-        print('Neuron __init__() called')
+        print('Neuron __init__() called', I_ext)
 
-    # def self_identifies(self):
-    #     return "I'm a neuron!"
+    def self_identifies(self):
+        return "I'm a neuron!"
 
 class FHN_Neuron(Neuron):
-    def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5], *args, **kwargs):
-        super().__init__(I_ext)
+    # Fitzhugh-Nagumo equations:
+    #           dv/dt = v - (v^3 / 3) - w + i
+    #           dw/dt = (v + alpha - beta*w) / tau
+    # v = membrane voltage
+    # w = relaxation or recovery variable
+    # I = input current
+    # a, b, tau parameters of the model
+    # 𝑎 = 0.7, 𝑏 = 0.8 and 𝜏 = 12.5.
+    def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
+        super().__init__()
         self.a = a
         self.b = b
         self.tau = tau
         self.x0 = x0
-        self.I_ext = I_ext
-        print(I_ext)
+        # self.I_ext = I_ext
+        print('FHN Neuron __init__() called', I_ext)
 
     def dx_dt(self, x, t, I):
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
@@ -27,7 +35,6 @@ class FHN_Neuron(Neuron):
 
     def solve(self, x0, I, t):
         y = odeint(self.dx_dt,x0,t,args=(I,))
-        print(y.shape)
         return y
 
     def plot(self, I, t):
