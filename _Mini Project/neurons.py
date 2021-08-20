@@ -4,13 +4,24 @@ from scipy.optimize import fsolve
 
 import matplotlib.pyplot as plt
 
-class Neuron():
+class Neuron(object):
     def __init__(self, I_ext=0):
         self.I_ext = I_ext
         print('Neuron __init__() called', I_ext)
 
     def self_identifies(self):
         return "I'm a neuron!"
+
+    def plot(self, y, t):
+        # y = self.solve(self.x0, I, t)
+
+        # plot results
+        plt.plot(t,y[0])
+        plt.xlabel('time')
+        plt.ylabel('y(t)')
+        plt.title("Applied current: %s mA/cm2" % y[1])
+        plt.show()
+        return None
 
 class FHN_Neuron(Neuron):
     # Fitzhugh-Nagumo equations:
@@ -30,44 +41,21 @@ class FHN_Neuron(Neuron):
         # self.I_ext = I_ext
         print('FHN Neuron __init__() called', I_ext)
 
-    def dx_dt(self, x, I):
+    def dx_dt(self, x, t, I):
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
         return [dvdt,dwdt]
 
-    def solve(self, x0, I, t):
-        y = odeint(self.dx_dt,x0,t,args=(I,))
-        return y
+    def solve(self, I, t):
+        y = odeint(self.dx_dt, self.x0, t, args=(I,))
+        return y, I
 
-    def solve_ss(self, I):
+    def solve_ss(self, I, t):
         # eq = fsolve(self.dx_dt, self.x0, I)
-        initial_guess = [-1, -1]
-        eq = fsolve(self.dx_dt, self.x0, I)
-        return eq
+        # initial_guess = [-1, -1]
 
-    # def diff_eqs(x, I):
-    # V, w = x
-    # return [V - V**3 - w + I, .1*(V - 0.5*w+1)]
-
-    # def get_fixed_point(I):
-    #   initial_guess = [-1, -1]
-    #   fixed_point = opt.fsolve(diff_eqs, initial_guess, I)
-    #   return fixed_point
-#
-#     V_fp, w_fp = get_fixed_point(I=0)
-#     print(V_fp)
-#     print(w_fp)
-
-    def plot(self, I, t):
-        y = self.solve(self.x0, I, t)
-
-        # plot results
-        plt.plot(t,y)
-        plt.xlabel('time')
-        plt.ylabel('y(t)')
-        plt.title("Applied current: %s mA/cm2" % I)
-        plt.show()
-        return None
+        eq = fsolve(self.dx_dt, self.x0, args=(t,I))
+        return "Roots: ", eq
 
     def self_identifies(self):
         return "I'm a FitzHugh Nagamo neuron!"
@@ -105,3 +93,36 @@ class FHN_Neuron(Neuron):
 # plt.xlabel('time')
 # plt.ylabel('y(t)')
 # plt.show()
+
+class Rinzel_Neuron(FHN_Neuron):
+    def __init__(self, I_ext=1, e=0.0001, c=-0.775, x0=[0.7,-0.5,0]):
+        super().__init__()
+        self.I_ext = I_ext
+        self.e  = e
+        self.c  = c
+
+        print('Rinzel Neuron __init__() called')
+
+    def dx_dt(self, x, I, z):
+        dvdt = x[0] - (x[0]**3/3) - x[1] + z + I
+        dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
+        dzdt = self.e* (-x[0] + self.c - z)
+        return [dvdt,dwdt,dzdt]
+
+    def solve(self, x0, I, z, t):
+        y = odeint(self.dx_dt,x0,t,args=(I,z,))
+        return y
+
+    # def plot(self, I, t):
+    #     y = self.solve(self.x0, I, t)
+    #
+    #     # plot results
+    #     plt.plot(t,y)
+    #     plt.xlabel('time')
+    #     plt.ylabel('y(t)')
+    #     plt.title("Applied current: %s mA/cm2" % I)
+    #     plt.show()
+    #     return None
+
+    def self_identifies(self):
+        return "I'm a Rinzel neuron!"
