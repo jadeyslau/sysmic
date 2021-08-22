@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class Neuron(object):
     def __init__(self, I_ext=0):
         self.I_ext = I_ext
-        print('Neuron __init__() called', I_ext)
+        print('Neuron __init__() called')
 
     def self_identifies(self):
         return "I'm a neuron!"
@@ -39,7 +39,7 @@ class FHN_Neuron(Neuron):
         self.tau = tau
         self.x0 = x0
         # self.I_ext = I_ext
-        print('FHN Neuron __init__() called', I_ext)
+        print('FHN Neuron __init__() called')
 
     def dx_dt(self, x, t, I):
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
@@ -100,17 +100,17 @@ class Rinzel_Neuron(FHN_Neuron):
         self.I_ext = I_ext
         self.e  = e
         self.c  = c
-
         print('Rinzel Neuron __init__() called')
 
-    def dx_dt(self, x, I, z):
+    def dx_dt(self, x, t, I, z):
         dvdt = x[0] - (x[0]**3/3) - x[1] + z + I
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
         dzdt = self.e* (-x[0] + self.c - z)
         return [dvdt,dwdt,dzdt]
 
-    def solve(self, x0, I, z, t):
-        y = odeint(self.dx_dt,x0,t,args=(I,z,))
+    def solve(self, I, t, z=0):
+        # print(I, t, z)
+        y = odeint(self.dx_dt, self.x0, t, args=(I,z,))
         return y
 
     # def plot(self, I, t):
@@ -126,3 +126,12 @@ class Rinzel_Neuron(FHN_Neuron):
 
     def self_identifies(self):
         return "I'm a Rinzel neuron!"
+
+
+# import matplotlib.pyplot as plt
+#     plt.plot(t, sol[:, 0], 'b', label='theta(t)')
+#     plt.plot(t, sol[:, 1], 'g', label='omega(t)')
+#     plt.legend(loc='best')
+#     plt.xlabel('t')
+#     plt.grid()
+#     plt.show()
