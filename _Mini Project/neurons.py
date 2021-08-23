@@ -7,19 +7,24 @@ import matplotlib.pyplot as plt
 class Neuron(object):
     def __init__(self, I_ext=0):
         self.I_ext = I_ext
+        self.type = None
         print('Neuron __init__() called')
 
     def self_identifies(self):
-        return "I'm a neuron!"
+        return "I'm a %s neuron!" % self.type
 
-    def plot(self, y, t):
+    def plot(self, y, t, title=None):
         # y = self.solve(self.x0, I, t)
-
         # plot results
         plt.plot(t,y[0])
-        plt.xlabel('time')
+        plt.xlabel('Time (ms)')
         plt.ylabel('y(t)')
-        plt.title("Applied current: %s mA/cm2" % y[1])
+        plt.legend(self.legend)
+
+        if y[2]:
+            plt.title(y[2])
+        else:
+            plt.title("Applied current: %s mA/cm2" % y[1])
         plt.show()
         return None
 
@@ -38,6 +43,10 @@ class FHN_Neuron(Neuron):
         self.b = b
         self.tau = tau
         self.x0 = x0
+        self.legend = ['v','w']
+
+        self.type = "FitzHugh-Nagumo"
+
         # self.I_ext = I_ext
         print('FHN Neuron __init__() called')
 
@@ -48,51 +57,13 @@ class FHN_Neuron(Neuron):
 
     def solve(self, I, t):
         y = odeint(self.dx_dt, self.x0, t, args=(I,))
-        return y, I
+        title = ("Applied current: %s mA/cm2" % I)
+        return y, I, title
 
-    def solve_ss(self, I, t):
-        # eq = fsolve(self.dx_dt, self.x0, I)
-        # initial_guess = [-1, -1]
-
+    def solve_ss(self, t, I=0):
         eq = fsolve(self.dx_dt, self.x0, args=(t,I))
         return "Roots: ", eq
 
-    def self_identifies(self):
-        return "I'm a FitzHugh Nagamo neuron!"
-# function that returns dy/dt
-# def model(x, t):
-#     I = 0.5
-#     a=0.7
-#     b=0.8
-#     tau=12.5
-#     dvdt = x[0] - (x[0]**3/3) - x[1] + I
-#     dwdt = (x[0] + a - b*x[1]) / tau
-#     return np.array(dvdt,dwdt)
-
-# def dx_dt(x, t):
-#     I   = 0
-#     a   = 0.7
-#     b   = 0.8
-#     tau = 12.5
-#
-#     dvdt = x[0] - (x[0]**3/3) - x[1] + I
-#     dwdt = (x[0] + a - b*x[1]) / tau
-#     return [dvdt,dwdt]
-#
-# # initial condition
-# x0 = [0.5,-0.7]
-# I = 0
-# # time points
-# t = np.linspace(0, 200, num=1500)
-#
-# # solve ODE
-# y = odeint(dx_dt,x0,t)
-#
-# # plot results
-# plt.plot(t,y)
-# plt.xlabel('time')
-# plt.ylabel('y(t)')
-# plt.show()
 
 class Rinzel_Neuron(FHN_Neuron):
     def __init__(self, I_ext=1, e=0.0001, c=-0.775, x0=[0.7,-0.5,0]):
@@ -100,6 +71,11 @@ class Rinzel_Neuron(FHN_Neuron):
         self.I_ext = I_ext
         self.e  = e
         self.c  = c
+        self.x0 = x0
+        self.legend = ['v', 'w', 'z']
+
+        self.type = "Rinzel"
+
         print('Rinzel Neuron __init__() called')
 
     def dx_dt(self, x, t, I, z):
@@ -111,27 +87,9 @@ class Rinzel_Neuron(FHN_Neuron):
     def solve(self, I, t, z=0):
         # print(I, t, z)
         y = odeint(self.dx_dt, self.x0, t, args=(I,z,))
-        return y
+        title = "Applied current: %s mA/cm2, z = %s, e = %s, c = %s" % (I,z,self.e,self.c)
+        return y, I, title
 
-    # def plot(self, I, t):
-    #     y = self.solve(self.x0, I, t)
-    #
-    #     # plot results
-    #     plt.plot(t,y)
-    #     plt.xlabel('time')
-    #     plt.ylabel('y(t)')
-    #     plt.title("Applied current: %s mA/cm2" % I)
-    #     plt.show()
-    #     return None
-
-    def self_identifies(self):
-        return "I'm a Rinzel neuron!"
-
-
-# import matplotlib.pyplot as plt
-#     plt.plot(t, sol[:, 0], 'b', label='theta(t)')
-#     plt.plot(t, sol[:, 1], 'g', label='omega(t)')
-#     plt.legend(loc='best')
-#     plt.xlabel('t')
-#     plt.grid()
-#     plt.show()
+    def solve_ss(self, t, I=0):
+        eq = fsolve(self.dx_dt, self.x0, args=(t,I))
+        return "Roots: ", eq
