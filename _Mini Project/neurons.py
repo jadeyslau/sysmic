@@ -59,6 +59,7 @@ class FHN_Neuron(Neuron):
     # I = input current
     # a, b, tau parameters of the model
     # 𝑎 = 0.7, 𝑏 = 0.8 and 𝜏 = 12.5.
+    #x0=[0.7,-0.5]
     def __init__(self, I_ext=1, a=0.7, b=0.8, tau=12.5, x0=[0.7,-0.5]):
         super().__init__()
         self.a = a
@@ -74,6 +75,10 @@ class FHN_Neuron(Neuron):
         # print('FHN Neuron __init__() called')
 
     def dx_dt(self, x, t, I):
+        if t < 50 or t > 200:
+            I = 0
+
+        # print(t, I)
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
         return [dvdt,dwdt]
@@ -81,7 +86,7 @@ class FHN_Neuron(Neuron):
     def solve(self, I, t):
         y = odeint(self.dx_dt, self.x0, t, args=(I,))
         title = ("I = %s, a = %s, b = %s, tau = %s" % (I,self.a,self.b,self.tau))
-        print(title)
+        # print(y)
         return y, I, title
 
     def solve_ss(self, t, I=0):
