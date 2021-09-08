@@ -6,19 +6,23 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # t = np.linspace(0, 800, num=3000)
-I_on  = 150
-I_off = 600
+# I_on  = 150
+# I_off = 600
 
 A=0.7
 B=0.8
 TAU=12.5
 
 class Neuron(object):
-    def __init__(self, I_ext=0 ):
+    def __init__(self, I_ext=0, end=800 ):
         self.I_ext = I_ext
         self.type = False
 
-        self.t = np.linspace(0, 800, num=3000)
+        self.start = 0
+        self.end = end
+        self.t = np.linspace(self.start, self.end, num=3000)
+        self.I_on  = self.start+(self.end*0.1)
+        self.I_off = self.end-(self.end*0.1)
 
         # Seaborn graph aesthetics
         sns.set_style('darkgrid')
@@ -43,9 +47,6 @@ class Neuron(object):
 
         if singleplt:
             plt.plot(self.t,y[0][:,0:2])
-            # if len(y[0][:,2]) > 0:
-            #     plt.plot(t,y[0][:,2])
-
             plt.legend(self.legend)
 
             if save[0] == True:
@@ -83,7 +84,7 @@ class FHN_Neuron(Neuron):
 
 
     def dx_dt(self, x, t, I, fsolv=False):
-        if ((not fsolv) and (t < I_on or t > I_off)):
+        if ((not fsolv) and (t < self.I_on or t > self.I_off)):
             I = 0
         dvdt = x[0] - (x[0]**3/3) - x[1] + I
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
@@ -101,10 +102,13 @@ class FHN_Neuron(Neuron):
         return "Roots: v = %s, w = %s" % (eq[0], eq[1])
 
 class Rinzel_Neuron(FHN_Neuron):
-    def __init__(self, I_ext=1, a=A, b=B, tau=TAU, e=0.0001, c=-0.775, x0=[-1.02,-0.4,0.25]):
-        super().__init__()
-
-        # self.t = np.linspace(0, 5000, num=3000)
+    def __init__(self, I_ext=1, a=A, b=B, tau=TAU, e=0.0001, c=-0.775, x0=[-1.02,-0.4,0.25], end=20000):
+        super().__init__('t')
+        # self.start = 0
+        self.end = end
+        self.t = np.linspace(self.start, self.end, num=3000)
+        self.I_on  = self.start+(self.end*0.1)
+        self.I_off = self.end-(self.end*0.1)
 
         self.I_ext = I_ext
         self.a = a
@@ -122,7 +126,7 @@ class Rinzel_Neuron(FHN_Neuron):
 
     def dx_dt(self, x, t, I, fsolv=False):
         # x = [v,w,z]
-        if ((not fsolv) and (t < I_on or t > I_off)):
+        if ((not fsolv) and (t < self.I_on or t > self.I_off)):
             I = 0
         dvdt = x[0] - (x[0]**3/3) - x[1] + x[2] + I
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
@@ -144,10 +148,8 @@ class Rinzel_Neuron(FHN_Neuron):
         singleplt = False
         if ax is None:
             singleplt = True
-            fig,ax = plt.subplots(2, sharex=True)
-
+            fig,ax = plt.subplots(2, sharex=True, figsize=(40, 10))
         plt.xlabel('Time (ms)')
-        # plt.ylabel(self.label[0])
         plt.suptitle(y[2])
 
 
