@@ -5,17 +5,13 @@ from scipy.optimize import fsolve
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-# t = np.linspace(0, 800, num=3000)
-# I_on  = 150
-# I_off = 600
-
 A=0.7
 B=0.8
 TAU=12.5
 
 class Neuron(object):
-    def __init__(self, I_ext=0, end=800 ):
-        self.I_ext = I_ext
+    def __init__(self, end=800 ):
+
         self.type = False
 
         self.start = 0
@@ -34,6 +30,19 @@ class Neuron(object):
             return "I'm a neuron!"
         else:
             return "I'm a %s neuron!" % self.type
+
+    def solve(self, I):
+        y = odeint(self.dx_dt, self.x0, self.t, args=(I,))
+        title = "Applied current: %s mA/cm2, %s" % (I,self.title)
+        return y, I, title
+
+    def solve_ss(self, I=0):
+        fsolv = True
+        eq = fsolve(self.dx_dt, self.x0, args=(self.t,I,fsolv))
+        results = []
+        for i, x in enumerate(self.legend):
+            results.append({x: eq[i]})
+        return "Roots: ", results
 
     def plot(self, y, ax=None, save=[False,None]):
         singleplt = False
@@ -70,8 +79,8 @@ class FHN_Neuron(Neuron):
     # I = input current
     # a, b, tau parameters of the model
     # 𝑎 = 0.7, 𝑏 = 0.8 and 𝜏 = 12.5.
-    #x0=[0.7,-0.5]
-    def __init__(self, I_ext=1, a=A, b=B, tau=TAU, x0=[-1.2, -0.6]):
+
+    def __init__(self, a=A, b=B, tau=TAU, x0=[-1.2, -0.6]):
         super().__init__()
         self.a = a
         self.b = b
@@ -82,6 +91,8 @@ class FHN_Neuron(Neuron):
 
         self.type = "FitzHugh-Nagumo"
 
+        self.title = ("a = %s, b = %s, tau = %s" % (self.a,self.b,self.tau))
+
 
     def dx_dt(self, x, t, I, fsolv=False):
         if ((not fsolv) and (t < self.I_on or t > self.I_off)):
@@ -90,19 +101,8 @@ class FHN_Neuron(Neuron):
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
         return [dvdt,dwdt]
 
-    def solve(self, I):
-        y = odeint(self.dx_dt, self.x0, self.t, args=(I,))
-        title = ("I = %s, a = %s, b = %s, tau = %s" % (I,self.a,self.b,self.tau))
-        # print( title, 'x0:', self.x0 )
-        return y, I, title
-
-    def solve_ss(self, I=0):
-        fsolv = True
-        eq = fsolve(self.dx_dt, self.x0, args=(self.t,I,fsolv))
-        return "Roots: v = %s, w = %s" % (eq[0], eq[1])
-
 class Rinzel_Neuron(FHN_Neuron):
-    def __init__(self, I_ext=1, a=A, b=B, tau=TAU, e=0.0001, c=-0.775, x0=[-1.02,-0.4,0.25], end=20000):
+    def __init__(self, a=A, b=B, tau=TAU, e=0.0001, c=-0.775, x0=[-1.02,-0.4,0.25], end=20000):
         super().__init__('t')
         # self.start = 0
         self.end = end
@@ -110,7 +110,6 @@ class Rinzel_Neuron(FHN_Neuron):
         self.I_on  = self.start+(self.end*0.1)
         self.I_off = self.end-(self.end*0.1)
 
-        self.I_ext = I_ext
         self.a = a
         self.b = b
         self.tau = tau
@@ -123,6 +122,8 @@ class Rinzel_Neuron(FHN_Neuron):
         print(self.a, self.b, self.tau, self.e, self.c)
         self.type = "Rinzel"
 
+        self.title = "e = %s, c = %s" % (self.e,self.c)
+
 
     def dx_dt(self, x, t, I, fsolv=False):
         # x = [v,w,z]
@@ -133,16 +134,6 @@ class Rinzel_Neuron(FHN_Neuron):
         dzdt = self.e * (-x[0] + self.c - x[2])
 
         return [dvdt,dwdt,dzdt]
-
-    def solve(self, I):
-        y = odeint(self.dx_dt, self.x0, self.t, args=(I,))
-        title = "Applied current: %s mA/cm2, e = %s, c = %s" % (I,self.e,self.c)
-        return y, I, title
-
-    def solve_ss(self, I=0):
-        fsolv = True
-        eq = fsolve(self.dx_dt, self.x0, args=(self.t,I,fsolv))
-        return "Roots: v = %s, w = %s, z = %s" % (eq[0], eq[1], eq[2])
 
     def plot(self, y, ax=None, save=[False,None]):
         singleplt = False
