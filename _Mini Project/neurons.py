@@ -4,6 +4,7 @@ from scipy.optimize import fsolve
 
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 
 # Global default parameters
 A=0.7
@@ -20,6 +21,9 @@ class Neuron(object):
         self.t = np.linspace(self.start, self.end, num=3000) # Time span
         self.I_on  = self.start+(self.end*0.1) # Time when current applied
         self.I_off = self.end-(self.end*0.1)  # Time when current switched off
+
+        self.xrange = (-2.5, 2.5)
+        self.steps = 100
 
         # Seaborn graph aesthetics
         sns.set_style('darkgrid')
@@ -41,10 +45,12 @@ class Neuron(object):
         Returns:
             y (arr)  : Membrane potential at the given times. Either 2 or 3 dimensional depending on neuron type.
             title (str): Title of experiment containing key information.
+            I (int): Passing to next function
         """
-        y = odeint(self.dx_dt, self.x0, self.t, args=(I,))
-        title = "Applied current: %s mA/cm2, %s" % (I,self.title)
-        return y, title
+        Y, infodict = odeint(self.dx_dt, self.x0, self.t, args=(I,),full_output=True)
+        # print(infodict['message'])
+        title = "Applied current: %s mA/cm2, %s" % (I,self.params)
+        return Y, title, I
 
     def solve_ss(self, I=0):
         """
@@ -63,7 +69,7 @@ class Neuron(object):
             results.append({x: eq[i]})
         return "Roots: ", results
 
-    def plot(self, y, ax=None, save=[False,None]):
+    def plot(self, Y, ax=None, save=[False,None]):
         """
         Plots the results after solving with odeint.
 
@@ -74,25 +80,49 @@ class Neuron(object):
         Returns:
             results (plot): Plot or ax
         """
+        # print(Y)
+        x,y = Y[0].T
+        I = Y[2]
         singleplt = False
-
         if ax is None:
             singleplt = True
 
-        plt.xlabel('Time (ms)')
-        plt.ylabel(self.label)
-        plt.title(y[1])
+        # plt.xlabel('Time (ms)')
+        # plt.ylabel(self.label)
+        # plt.title(Y[1])
 
         if singleplt:
-            plt.plot(self.t,y[0][:,0:2])
-            plt.legend(self.legend)
+            fig = plt.figure(figsize=(15,5))
+            fig.subplots_adjust(wspace = 0.1, hspace = 0.3)
+            ax1 = fig.add_subplot(1,2,1)
+            ax2 = fig.add_subplot(1,2,2)
+
+            ax1.plot(self.t,Y[0][:,0:2])
+            ax1.set_xlabel('Time (ms)')
+            ax1.set_ylabel(self.label)
+            ax1.set_title(Y[1])
+            ax1.legend(self.legend)
+
+
+            # ax2.plot(x, y, color="gray")
+            # ax2.set_xlabel("v")
+            # ax2.set_ylabel("w")
+            # ax2.set_title("Phase space")
+            # # ax2.grid()
+            #
+            # self.plot_nullclines(I, ax=ax2)
+            # self.plot_flow(ax=ax2, I,)
+            self.plot_phase_diagram(Y, I, ax=None, title=None)
 
             if save[0] == True:
                 plt.savefig('Figures/'+save[1]+'.eps', format='eps')
                 print('Figure saved as '+save[1])
             return plt.show()
         else:
-            ax.plot(self.t,y[0][:,0:2])
+            plt.xlabel('Time (ms)')
+            plt.ylabel(self.label)
+            plt.title(Y[1])
+            ax.plot(self.t,Y[0][:,0:2])
 
 
             plt.legend(self.legend)
@@ -129,7 +159,7 @@ class FHN_Neuron(Neuron):
 
         self.type = "FitzHugh-Nagumo"
 
-        self.title = ("a = %s, b = %s, tau = %s" % (self.a,self.b,self.tau))
+        self.params = ("a = %s, b = %s, tau = %s" % (self.a,self.b,self.tau))
 
 
     def dx_dt(self, x, t, I, fsolv=False):
@@ -151,7 +181,7 @@ class FHN_Neuron(Neuron):
         dwdt = (x[0] + self.a - self.b*x[1]) / self.tau
         return [dvdt,dwdt]
 
-    def plot_nullclines(self, I, ax, vmin=-1, vmax=1):
+    def plot_nullcline(self, I, ax, style='--', vmin=-1, vmax=1):
         """
         Plots nullclines for FHN model
 
@@ -163,16 +193,62 @@ class FHN_Neuron(Neuron):
         Returns:
             None : (TODO. Bad practice, prob.)
         """
-        V = np.linspace(vmin,vmax,100)
+        # print(vmin, vmax)
+        v = np.linspace(vmin,vmax,100)
+        # V = np.linspace(self.xrange[0],self.xrange[1],self.steps)
          # Plot a nullcline for dV/dt = 0
-        ax.plot(V, ((V - V**3) + I), label='dV/dt=0')
+        # ax.plot(V, ((V - V**3) + I), style, label='dV/dt=0')
+        ax.plot(v, v - v**3 + I, style, label='dV/dt=0')
 
         # Plot a nullcline for dw/dt = 0
-        ax.plot(V, ((V+self.a)/self.b), label='dw/dt=0')
-        ax.set(xlabel='V', ylabel='w');
-        # ax.title('Nullclines: %s' % self.title)
+        # ax.plot(V, ((V+self.a)/self.b), style, label='dw/dt=0')
+        ax.plot(v, (v + self.a)/self.b, style, label='dw/dt=0')
+        ax.set(xlabel='v', ylabel='w');
+        # ax.text(0.45, 0.15, 'I = %s'% (I), transform=ax.transAxes,fontsize='medium', verticalalignment='top',bbox=dict(facecolor='0.9', edgecolor='none', pad=3.0))
+
         ax.legend()
+
+
         return None
+
+    def plot_flow(self,Y, I, ax, xrange, yrange, steps=50):
+
+        # Modified from https://www.normalesup.org/~doulcier/teaching/modeling/excitable_systems.html
+
+        x = np.linspace(xrange[0], xrange[1], steps)
+        y = np.linspace(yrange[0], yrange[1], steps)
+        X,Y = np.meshgrid(x,y)
+
+        dx,dy = self.dx_dt([X,Y],0,I, True)
+
+
+        ax.streamplot(X,Y,dx, dy, color=(0,0,0,.1))
+        # print(xrange[0], xrange[1],yrange[0], yrange[1])
+        ax.set(xlim=(xrange[0], xrange[1]), ylim=(yrange[0], yrange[1]))
+        return None
+
+    def plot_trajectory(self, Y, ax, xrange, yrange, steps=50):
+        x,y = Y[0].T
+        ax.plot(x,y, color='grey')
+        return None
+
+    def plot_phase_diagram(self, Y, I, ax=None, title=None):
+        # Modified from https://www.normalesup.org/~doulcier/teaching/modeling/excitable_systems.html
+        if ax is None:
+            ax = plt.gca()
+        if title is None:
+            title = "Phase space, {}".format(self.params+', I = %s' % (I))
+
+        ax.set(xlabel='v', ylabel='w', title=title)
+
+        # xlimit = (-3, 3)
+        # ylimit = (-2, 3)
+        xlimit = (-1.5,1.5)
+        ylimit = (-.6, .9)
+        self.plot_flow(Y, I, ax, xlimit, ylimit)
+        self.plot_nullcline(I, ax, vmin=xlimit[0],vmax=xlimit[1])
+        self.plot_trajectory(Y,ax,xlimit, ylimit)
+        # return None
 
 class Rinzel_Neuron(FHN_Neuron):
     def __init__(self, a=A, b=B, tau=TAU, e=0.0001, c=-0.775, x0=[-1.03,-0.41,0.25], end=20000):
@@ -206,8 +282,8 @@ class Rinzel_Neuron(FHN_Neuron):
         # print(self.a, self.b, self.tau, self.e, self.c)
         self.type = "Rinzel"
 
-        # self.title = "e = %s, c = %s" % (self.e,self.c)
-        self.title = "a = %s, b = %s, tau = %s, e = %s, c = %s" % (self.a,self.b,self.tau,self.e,self.c)
+        # self.params = "e = %s, c = %s" % (self.e,self.c)
+        self.params = "a = %s, b = %s, tau = %s, e = %s, c = %s" % (self.a,self.b,self.tau,self.e,self.c)
 
 
     def dx_dt(self, x, t, I, fsolv=False):
