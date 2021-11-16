@@ -198,7 +198,7 @@ class FHN_Neuron(Neuron):
         # V = np.linspace(self.xrange[0],self.xrange[1],self.steps)
          # Plot a nullcline for dV/dt = 0
         # ax.plot(V, ((V - V**3) + I), style, label='dV/dt=0')
-        ax.plot(v, v - v**3 + I, style, label='dV/dt=0')
+        ax.plot(v, v - (v**3/3) + I, style, label='dV/dt=0')
 
         # Plot a nullcline for dw/dt = 0
         # ax.plot(V, ((V+self.a)/self.b), style, label='dw/dt=0')
