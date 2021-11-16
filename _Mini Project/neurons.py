@@ -241,14 +241,14 @@ class FHN_Neuron(Neuron):
 
         ax.set(xlabel='v', ylabel='w', title=title)
 
-        # xlimit = (-3, 3)
-        # ylimit = (-2, 3)
-        xlimit = (-1.5,1.5)
-        ylimit = (-.6, .9)
+        xlimit = (-3, 3)
+        ylimit = (-2, 3)
+        # xlimit = (-1.5,1.5)
+        # ylimit = (-.6, .9)
         self.plot_flow(Y, I, ax, xlimit, ylimit)
         self.plot_nullcline(I, ax, vmin=xlimit[0],vmax=xlimit[1])
         self.plot_trajectory(Y,ax,xlimit, ylimit)
-        # return None
+        return None
 
 class Rinzel_Neuron(FHN_Neuron):
     def __init__(self, a=A, b=B, tau=TAU, e=0.0001, c=-0.775, x0=[-1.03,-0.41,0.25], end=20000):
